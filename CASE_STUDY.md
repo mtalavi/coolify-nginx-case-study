@@ -26,9 +26,7 @@ The [official Nginx advisory list](https://nginx.org/en/security_advisories.html
 | CVE-2026-60005 | slice module | 1.31.3 |
 | CVE-2026-15176 | alias with rewrite | 1.31.7 |
 
-These are configuration-dependent upstream vulnerabilities. A shipped version match establishes a maintenance concern; it does not establish an attacker-controlled path through Coolify's default configuration or rule out vendor backports.
-
-No exploit against default Coolify, compromise of our servers, Coolify-specific CVSS score, new Nginx vulnerability or first-discovery claim is established here. The practical contribution is connecting the release image to the stale pin and supplying a tested refresh.
+These upstream advisories have configuration-specific prerequisites. Deployment severity depends on enabled directives, reachable request paths and any vendor backports. This investigation verified the shipped package, traced its version pin and tested the refresh.
 
 ## Method and result
 
@@ -47,7 +45,7 @@ The [patch](upstream-nginx-pin.patch) changes the shared production version argu
 +ARG NGINX_VERSION=1.31.8-r1
 ```
 
-It is a proposal awaiting upstream triage, not an accepted or released Coolify fix. Existing reports were checked; the closest matches concerned a development-image pin and header buffers. Private reports cannot be searched.
+Upstream status: submitted for triage in issue #12311. Existing reports were checked; the closest matches concerned a development-image pin and header buffers. Private reports cannot be searched.
 
 ## Production use and rollback
 
@@ -60,5 +58,4 @@ It is a proposal awaiting upstream triage, not an accepted or released Coolify f
 
 ## Attribution
 
-Copyright 2026 mtalavi. [Apache-2.0](LICENSE); retain applicable [NOTICE](NOTICE) attribution. No endorsement or independent security review is implied.
-
+Copyright 2026 mtalavi. [Apache-2.0](LICENSE); retain applicable [NOTICE](NOTICE) attribution.

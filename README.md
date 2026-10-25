@@ -15,7 +15,7 @@ A current application release can still contain an older dependency. During Cool
 | Node / PHP | 24.22.1 / 8.4.27 | Unchanged |
 | Candidate config / static HTTP | — | Pass /200 |
 
-The contribution is the **verified Coolify packaging finding, tested mitigation and reproducible evidence**. The Nginx vulnerabilities were already publicly documented. Default Coolify exploitability and first-discovery status have not been established.
+This repository documents the **verified Coolify packaging finding, tested mitigation and reproducible evidence**.
 
 ## Reproduce the fix
 
@@ -26,7 +26,7 @@ docker build --platform linux/amd64 -t coolify-nginx-refresh:4.5.0 .
 sh smoke-test.sh coolify-nginx-refresh:4.5.0
 ```
 
-The temporary test has no network, published ports, host mounts or production DB. It checks syntax and a static HTTP response, then removes its container. It does not prove full application acceptance.
+The temporary test has no network, published ports, host mounts or production DB. It checks syntax and a static HTTP response, then removes its container.
 
 Read the [report's deployment and rollback steps](CASE_STUDY.md#production-use-and-rollback) before considering production use. A custom image must be maintained across future Coolify updates.
 
@@ -37,6 +37,3 @@ Copyright **2026 mtalavi**. Apache 2.0 permits reuse and commercial use while re
 To cite this work: **mtalavi (2026), “Coolify Nginx security refresh,” GitHub technical report.** [Citation metadata](CITATION.cff)
 
 If this helps you audit an installation, a star helps others find it. Reproduction results and corrections are welcome.
-
-This is an independent report, not an upstream-endorsed advisory or a peer-reviewed paper.
-
