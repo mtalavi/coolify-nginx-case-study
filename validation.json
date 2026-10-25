@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-10-25T00:51:20.144813+00:00",
+  "architecture": "linux/amd64",
+  "production_changes": false,
+  "full_coolify_database_e2e": false,
+  "exploit_attempted": false,
+  "arm64_runtime_tested": false,
+  "config_files_permissions_identical": true,
+  "application_tree_node_php_identical": true,
+  "available_packages": {
+    "x86_64": {
+      "url": "https://nginx.org/packages/mainline/alpine/v3.24/main/x86_64/APKINDEX.tar.gz",
+      "version": "1.31.8-r1",
+      "present": true
+    },
+    "aarch64": {
+      "url": "https://nginx.org/packages/mainline/alpine/v3.24/main/aarch64/APKINDEX.tar.gz",
+      "version": "1.31.8-r1",
+      "present": true
+    }
+  },
+  "status": "PASS",
+  "official_image": "coollabsio/coolify@sha256:d96931bef961ab5c173edfca190e03d4b77e93dee622da780ddfa22cfa2b77cf",
+  "candidate_nginx": "1.31.8-r1",
+  "static_http_status": "200",
+  "nginx_config_test_exit": 0,
+  "published_recipe_smoke_test": {
+    "date_dubai": "2026-10-25",
+    "image": "coolify-nginx-refresh:4.5.0",
+    "build_exit_code": 0,
+    "smoke_test_exit_code": 0,
+    "nginx": "1.31.8",
+    "config_syntax": "PASS",
+    "static_http": 200
+  }
+}
