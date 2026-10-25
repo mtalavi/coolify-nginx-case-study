@@ -38,5 +38,5 @@ To cite this work: **mtalavi (2026), “Coolify Nginx security refresh,” GitHu
 
 If this helps you audit an installation, a star helps others find it. Reproduction results and corrections are welcome.
 
-AI assistance: OpenAI Codex helped investigate and write this report. The documented checks were executed. This is an independent report, not an upstream-endorsed advisory or a peer-reviewed paper.
+This is an independent report, not an upstream-endorsed advisory or a peer-reviewed paper.
 

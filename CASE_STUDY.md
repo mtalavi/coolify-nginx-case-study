@@ -60,5 +60,5 @@ It is a proposal awaiting upstream triage, not an accepted or released Coolify f
 
 ## Attribution
 
-Copyright 2026 mtalavi. [Apache-2.0](LICENSE); retain applicable [NOTICE](NOTICE) attribution. AI assistance was used and disclosed in the upstream report. No endorsement or independent security review is implied.
+Copyright 2026 mtalavi. [Apache-2.0](LICENSE); retain applicable [NOTICE](NOTICE) attribution. No endorsement or independent security review is implied.
 
