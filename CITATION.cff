@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "Please cite this technical report if you reuse its investigation or validation material."
+title: "Coolify Nginx security refresh"
+type: software
+authors:
+  - name: "mtalavi"
+repository-code: "https://github.com/mtalavi/coolify-nginx-case-study"
+url: "https://github.com/mtalavi/coolify-nginx-case-study/blob/main/CASE_STUDY.md"
+date-released: 2026-10-25
+license: Apache-2.0
+abstract: "A reproducible Coolify packaging investigation, narrowly scoped Nginx refresh, validation evidence and operational rollback guidance."
+

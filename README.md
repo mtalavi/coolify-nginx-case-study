@@ -1,25 +1,23 @@
-# Coolify Nginx refresh: a small case study
+# Coolify Nginx security refresh
 
-By [mtalavi](https://github.com/mtalavi) · Checked **25 October 2026** · [Apache-2.0](LICENSE)
+**Technical report, reproducible fix and operational case study by [mtalavi](https://github.com/mtalavi).**
 
-During routine Coolify maintenance, we checked the container's dependencies as well as the application version. Coolify was up to date, but its bundled Nginx was still pinned to an older release.
+[Upstream issue #12311](https://github.com/coollabsio/coolify/issues/12311) · [Technical report](CASE_STUDY.md) · [Test evidence](VERIFICATION.md) · [Apache-2.0](LICENSE)
 
-## What we found
+A current application release can still contain an older dependency. During Coolify maintenance, we verified that the official **v4.5.0** amd64 image shipped **Nginx 1.31.2-r1**, then built and tested a narrowly scoped refresh.
 
-The official **Coolify v4.5.0** amd64 image reports **nginx 1.31.2-r1**. The [release Dockerfile](https://github.com/coollabsio/coolify/blob/5ca69705d681da46028ea15a8a39d90a4ebcce89/docker/production/Dockerfile) pins the same package.
+| Check | Official image | Tested candidate |
+|---|---|---|
+| Nginx package | 1.31.2-r1 | 1.31.8-r1 |
+| Nginx configuration and permissions | Baseline | Identical |
+| Application file-tree hash | Baseline | Identical |
+| Runtime user | www-data | www-data |
+| Node / PHP | 24.22.1 / 8.4.27 | Unchanged |
+| Candidate config / static HTTP | — | Pass /200 |
 
-That version appears in affected ranges in the [published Nginx advisories](https://nginx.org/en/security_advisories.html). This is a dependency maintenance finding. We have **not demonstrated an exploit against default Coolify**, and configuration and possible vendor backports still matter.
+The contribution is the **verified Coolify packaging finding, tested mitigation and reproducible evidence**. The Nginx vulnerabilities were already publicly documented. Default Coolify exploitability and first-discovery status have not been established.
 
-## The small fix
-
-For upstream, the proposed change is one line:
-
-```diff
--ARG NGINX_VERSION=1.31.2-r1
-+ARG NGINX_VERSION=1.31.8-r1
-```
-
-For an isolated check, this repo's [Dockerfile](Dockerfile) derives from the exact official image digest, upgrades only Nginx, restores the complete original Nginx configuration, and returns to `www-data`.
+## Reproduce the fix
 
 ```sh
 git clone https://github.com/mtalavi/coolify-nginx-case-study.git
@@ -28,23 +26,17 @@ docker build --platform linux/amd64 -t coolify-nginx-refresh:4.5.0 .
 sh smoke-test.sh coolify-nginx-refresh:4.5.0
 ```
 
-The test starts a temporary container with no network, published ports, host mounts or production database. It checks Nginx syntax and a static HTTP response, then removes that container.
+The temporary test has no network, published ports, host mounts or production DB. It checks syntax and a static HTTP response, then removes its container. It does not prove full application acceptance.
 
-## What passed
+Read the [report's deployment and rollback steps](CASE_STUDY.md#production-use-and-rollback) before considering production use. A custom image must be maintained across future Coolify updates.
 
-The local amd64 package upgrade, `nginx -t`, and static HTTP **200** passed. Nginx configuration hashes and ownership/permissions matched the original. The application file-tree hash, runtime user and Node/PHP versions also stayed the same.
+## Credit and reuse
 
-We checked package availability for both x86_64 and aarch64. We did **not** run the full upstream multi-stage build, ARM runtime tests or database-backed application acceptance. See [the short case study](CASE_STUDY.md) and [validation summary](validation.json).
+Copyright **2026 mtalavi**. Apache 2.0 permits reuse and commercial use while requiring preservation of applicable copyright/attribution notices; see [LICENSE](LICENSE) and [NOTICE](NOTICE). Upstream projects retain their own licenses.
 
-## Before using this in production
+To cite this work: **mtalavi (2026), “Coolify Nginx security refresh,” GitHub technical report.** [Citation metadata](CITATION.cff)
 
-This is a reproducible example, not an automatic production installer. Back up configuration and data, retain the previous image, and stage the candidate before changing the existing Coolify image override. Preserve all other Compose settings. After recreation, verify the real image/version, dashboard, queues and connected services; restore the previous image setting if checks fail.
+If this helps you audit an installation, a star helps others find it. Reproduction results and corrections are welcome.
 
-A derived image needs rebuilding and checking for each future Coolify version. Otherwise it can quietly hold the application at an old release.
-
-## Attribution and reuse
-
-Original material here is copyright **2026 mtalavi**, licensed under **Apache 2.0**. Keep the license and applicable attribution from [NOTICE](NOTICE) when redistributing. This does not add a mandatory UI credit or restrict commercial use. Coolify and Nginx retain their own licenses.
-
-This finding was also sent privately to the maintainers. Upstream acceptance is not claimed. AI assistance: OpenAI Codex helped prepare the investigation and writing; the reported checks were actually executed.
+AI assistance: OpenAI Codex helped investigate and write this report. The documented checks were executed. This is an independent report, not an upstream-endorsed advisory or a peer-reviewed paper.
 

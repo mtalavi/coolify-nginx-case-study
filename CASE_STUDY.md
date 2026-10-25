@@ -1,41 +1,64 @@
-# Case study: updating Coolify did not update this Nginx pin
+# Technical report: Nginx patch lag in Coolify v4.5.0
 
 **Author:** [mtalavi](https://github.com/mtalavi)  
-**Date:** 25 October 2026
+**Published:** 25 October 2026  
+**Upstream:** [coollabsio/coolify#12311](https://github.com/coollabsio/coolify/issues/12311)
 
-### Starting point
+## Finding
 
-Routine maintenance brought our Coolify instances to v4.5.0. We then checked an independent copy of the official image locally. It contained Nginx1.31.2-r1; the production Dockerfile pinned that exact package.
+After updating Coolify, we checked the dependency inside an independent copy of the official image. The application was v4.5.0; the bundled Nginx package was still 1.31.2-r1. The [release Dockerfile](https://github.com/coollabsio/coolify/blob/5ca69705d681da46028ea15a8a39d90a4ebcce89/docker/production/Dockerfile) pinned that exact version, as did the main source checked during the investigation.
 
-The immutable Docker Hub index was:
+The immutable Docker Hub image index was:
 
 ```text
 sha256:d96931bef961ab5c173edfca190e03d4b77e93dee622da780ddfa22cfa2b77cf
 ```
 
-### What we changed
+Inspection ran on linux/amd64 without network access, host mounts, credentials or published ports. Node 24.22.1 and PHP 8.4.27, with PHP upload progress disabled, were already present. This finding concerns the Nginx package.
 
-We built a derivative image from that digest and upgraded to Nginx1.31.8-r1 using the signed nginx.org Alpine repository. We saved and restored the **whole** `/etc/nginx` tree, including templates and permissions, rather than replacing it with package defaults. The image still runs as `www-data`.
+## What the security evidence means
 
-The corresponding [upstream proposal](upstream-nginx-pin.patch) changes only the shared version argument. It is a proposal, not an accepted upstream fix.
+The [official Nginx advisory list](https://nginx.org/en/security_advisories.html) places 1.31.2 in affected ranges for several known issues. Examples:
 
-### How we checked it
+| Advisory | Required feature/configuration | Mainline fix begins |
+|---|---|---|
+| CVE-2026-42533 | map with regular expressions | 1.31.3 |
+| CVE-2026-60005 | slice module | 1.31.3 |
+| CVE-2026-15176 | alias with rewrite | 1.31.7 |
 
-Before/after inspection confirmed identical Nginx configuration hashes and ownership/permissions, application file-tree hash, runtime user and Node/PHP versions. An isolated startup passed `nginx -t` and returned HTTP200 for `/build/manifest.json`.
+These are configuration-dependent upstream vulnerabilities. A shipped version match establishes a maintenance concern; it does not establish an attacker-controlled path through Coolify's default configuration or rule out vendor backports.
 
-The package exists for both supported CPU architectures, but only amd64 was executed locally. No exploit attempt or full database-backed acceptance test was performed.
+No exploit against default Coolify, compromise of our servers, Coolify-specific CVSS score, new Nginx vulnerability or first-discovery claim is established here. The practical contribution is connecting the release image to the stale pin and supplying a tested refresh.
 
-### Practical lesson
+## Method and result
 
-Check the running dependency, not just the Coolify release number. Replacing a package inside a live container is temporary; a pinned, tested derivative image is reproducible, but needs maintenance on later updates.
+We compared the immutable official image with a derivative built from the same digest. The [Dockerfile](Dockerfile) upgrades only Nginx to 1.31.8-r1 through the signed nginx.org Alpine repository. It preserves the **whole** `/etc/nginx` tree and restores `USER www-data`.
 
-For production, preserve the existing Compose configuration, create a recoverable backup, stage the image and keep the previous image reference. Switch only the Coolify image setting, recreate through the existing deployment path, and verify the dashboard and connected services. Roll back the image setting if validation fails.
+The Nginx configuration file hashes, ownership and permissions matched before and after. The application file-tree hash, Node/PHP versions and runtime user also matched. The candidate passed `nginx -t` and served `/build/manifest.json` with HTTP 200 during an isolated startup.
 
-### Sources
+The exact package was available for x86_64 and aarch64. Runtime execution was tested only on amd64. Full upstream multi-stage builds, ARM runtime tests and database-backed application acceptance were outside this check. [Evidence and hash method](VERIFICATION.md).
 
-- [Exact release Dockerfile](https://github.com/coollabsio/coolify/blob/5ca69705d681da46028ea15a8a39d90a4ebcce89/docker/production/Dockerfile)
-- [Nginx advisories and fixed versions](https://nginx.org/en/security_advisories.html)
-- [Nginx Alpine package index](https://nginx.org/packages/mainline/alpine/v3.24/main/x86_64/APKINDEX.tar.gz)
+## The proposed upstream fix
 
-Copyright2026 mtalavi. Apache-2.0; retain the applicable [NOTICE](NOTICE).
+The [patch](upstream-nginx-pin.patch) changes the shared production version argument:
+
+```diff
+-ARG NGINX_VERSION=1.31.2-r1
++ARG NGINX_VERSION=1.31.8-r1
+```
+
+It is a proposal awaiting upstream triage, not an accepted or released Coolify fix. Existing reports were checked; the closest matches concerned a development-image pin and header buffers. Private reports cannot be searched.
+
+## Production use and rollback
+
+1. Record the current Coolify image, version and rendered Compose configuration. Make a consistent configuration/data backup and verify recovery.
+2. Build the candidate separately and run the isolated test from the [README](README.md). Keep the current image available.
+3. Use the existing deployment path to change **only** the Coolify image override. Preserve all other settings, user, mounts, networks, ports, secrets and resource limits. Do not overwrite an existing custom Compose file with a generic example.
+4. Recreate the Coolify service and verify its actual image/version, dashboard, health, queues and connected applications. A static200 alone is insufficient.
+5. If checks fail, restore the previous image setting and recreate through the same path. This package-only example does not call for restoring the whole application database.
+6. Before a later Coolify update, stage a matching derivative or return to a verified fixed official image. A custom tag must not silently freeze Coolify at an old application version.
+
+## Attribution
+
+Copyright 2026 mtalavi. [Apache-2.0](LICENSE); retain applicable [NOTICE](NOTICE) attribution. AI assistance was used and disclosed in the upstream report. No endorsement or independent security review is implied.
 
